@@ -18,6 +18,11 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
+# For RlBerry display
+RUN sudo apt-get install -y xvfb
+RUN sudo apt-get install -y python-opengl
+RUN sudo apt-get install -y ffmpeg
+
 RUN mkdir /home/developer/ReinforcementLearningWithDemonstration/ 
 WORKDIR /home/developer/ReinforcementLearningWithDemonstration/
 
