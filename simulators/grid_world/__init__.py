@@ -1,0 +1,2 @@
+GAMMA = 0.9
+HORIZON = 50
