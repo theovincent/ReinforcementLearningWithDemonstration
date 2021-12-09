@@ -1,10 +1,10 @@
-import numpy as np
-import matplotlib.pyplot as plt
+import os
+from pathlib import Path
 
 from rlberry.envs import GridWorld
 
 
-def get_env():
+def get_simple_env():
     """Creates an instance of a grid-world MDP."""
     env = GridWorld(
         nrows=5,
@@ -17,15 +17,15 @@ def get_env():
     return env
 
 
-def simulate_policy(policy, name, env, horizon):
+def simulate_policy(policy, path_simulation, env, horizon):
     """Visualize a policy in an environment
 
     Args:
         policy: np.array
             matrix mapping states to action (Ns).
             If None, runs random policy.
-        name: str
-            name of the video to be store.
+        path_simulation: str
+            path of the video to be store.
         env: GridWorld
             environment where to run the policy.
         horizon: int
@@ -36,6 +36,10 @@ def simulate_policy(policy, name, env, horizon):
     # To make the rendering possible
     display = Display(visible=0, size=(1400, 900))
     display.start()
+
+    path_simulation = Path("videos", path_simulation)
+    if not path_simulation.parent.exists():
+        os.mkdir(path_simulation.parent)
 
     env.enable_rendering()
     state = env.reset()  # get initial state
@@ -49,6 +53,6 @@ def simulate_policy(policy, name, env, horizon):
         if is_terminal:
             break
     # save video and clear buffer
-    env.save_video(f"./videos/{name}.mp4", framerate=5)
+    env.save_video(str(path_simulation), framerate=5)
     env.clear_render_buffer()
     env.disable_rendering()
