@@ -6,27 +6,64 @@ import numpy as np
 from rlberry.envs import GridWorld
 
 
-class SimpleGridWorld(GridWorld):
+class Maze(GridWorld):
     """Creates an instance of a simple grid-world MDP."""
 
-    def __init__(self):
-        super().__init__(
-            nrows=5,
-            ncols=7,
-            reward_at={(0, 6): 1.0},
-            walls=((0, 4), (1, 4), (2, 4), (3, 4)),
-            success_probability=1,
-            terminal_states=((0, 6),),
-        )
+    def __init__(self, grid_name):
+        if grid_name == "test":
+            super().__init__(
+                nrows=1,
+                ncols=5,
+                reward_at={(0, 0): -1.0, (0, 1): 0.0, (0, 2): 0.1, (0, 3): 0.5, (0, 4): 1.0},
+                walls=None,
+                success_probability=1,
+                terminal_states=((0, 4),),
+            )
+        elif grid_name == "simple":
+            super().__init__(
+                nrows=5,
+                ncols=7,
+                reward_at={(0, 6): 1.0},
+                walls=((0, 4), (1, 4), (2, 4), (3, 4)),
+                success_probability=1,
+                terminal_states=((0, 6),),
+            )
+        elif grid_name == "large":
+            super().__init__(
+                nrows=10,
+                ncols=15,
+                reward_at={(9, 14): 1.0},
+                walls=(
+                    # First wall
+                    (0, 4),
+                    (1, 4),
+                    (2, 4),
+                    (3, 4),
+                    (4, 4),
+                    (5, 4),
+                    (6, 4),
+                    (7, 4),
+                    (8, 4),
+                    # Second wall
+                    (1, 9),
+                    (2, 9),
+                    (3, 9),
+                    (4, 9),
+                    (5, 9),
+                    (6, 9),
+                    (7, 9),
+                    (8, 9),
+                    (9, 9),
+                ),
+                success_probability=1,
+                terminal_states=((9, 14),),
+            )
 
     def get_feature(self, state, action):
-        feature_state = np.zeros(self.S)
-        feature_state[state] = 1
+        feature = np.zeros((self.S, self.A))
+        feature[state, action] = 1
 
-        feature_action = np.zeros(self.A)
-        feature_action[action] = 1
-
-        return np.append(feature_state, feature_action)
+        return feature.flatten()
 
     #
     # Code for rendering
@@ -62,7 +99,7 @@ class SimpleGridWorld(GridWorld):
         layout[walls_rows, walls_cols] = fill_walls_with
         return layout
 
-    def get_layout_img(self, state_data=None, colormap_name="cool", wall_color=(0.0, 0.0, 0.0)):
+    def get_layout_img(self, state_data=None, colormap_name="cool", wall_color=(0.0, 0.0, 0.0), min=None, max=None):
         """
         Returns an image array representing the value of `state_data` on
         the gridworld layout.
@@ -85,9 +122,13 @@ class SimpleGridWorld(GridWorld):
 
         # map data to [0.0, 1.0]
         if state_data is not None:
-            state_data = state_data - state_data.min()
+            if min is None:
+                min = state_data.min()
+            if max is None:
+                max = state_data.max()
+            state_data = state_data - min
             if state_data.max() > 0.0:
-                state_data = state_data / state_data.max()
+                state_data = state_data / max
 
         colormap_fn = plt.get_cmap(colormap_name)
         layout = self.get_layout_array(state_data, fill_walls_with=np.nan)
