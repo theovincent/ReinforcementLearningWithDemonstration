@@ -14,8 +14,6 @@ def display_value_function(env, w):
 
     V = Q.max(axis=1)
 
-    print("Value function on terminal node:", V[env.coord2index[env.terminal_states[0]]])
-    print("Value function on initial node:", V[0])
     plt.title("Value function")
     img = env.get_layout_img(V)
     plt.imshow(img)
