@@ -51,6 +51,7 @@ def lstd_grid_word(
                 env,
                 replay_buffer.buffer_rl,
                 u,
+                w,
                 regularisor,
                 regularisor_expert=regularisor_expert,
                 expert_samples=replay_buffer.buffer_expert,
