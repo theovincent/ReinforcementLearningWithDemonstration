@@ -9,7 +9,7 @@ from rlberry.envs import GridWorld
 class Maze(GridWorld):
     """Creates an instance of a simple grid-world MDP."""
 
-    def __init__(self, grid_name):
+    def __init__(self, grid_name, feature_type, dimensions=None, sigma=None):
         if grid_name == "test":
             super().__init__(
                 nrows=1,
@@ -59,11 +59,42 @@ class Maze(GridWorld):
                 terminal_states=((9, 14),),
             )
 
-    def get_feature(self, state, action):
-        feature = np.zeros((self.S, self.A))
-        feature[state, action] = 1
+        self.feature_type = feature_type
 
-        return feature.flatten()
+        if self.feature_type != "one_hot":
+            sim_matrix = np.zeros((self.Ns * self.Na, self.Ns))
+
+            for state_i in range(self.Ns):
+                for action_i in range(self.Na):
+                    next_state_i, _, _, _ = self.sample(state_i, action_i)
+                    row_next_state_i, col_next_state_i = self.index2coord[next_state_i]
+                    prop_row_next_state_i = row_next_state_i / self.nrows
+                    prop_col_next_state_i = col_next_state_i / self.ncols
+
+                    for state_j in range(self.Ns):
+                        row_state_j, col_state_j = self.index2coord[state_j]
+                        prop_row_state_j = row_state_j / self.nrows
+                        prop_col_state_j = col_state_j / self.ncols
+
+                        dist = np.sqrt(
+                            (prop_row_state_j - prop_row_next_state_i) ** 2.0
+                            + (prop_col_state_j - prop_col_next_state_i) ** 2.0
+                        )
+                        sim_matrix[state_i * self.Na + action_i, state_j] = np.exp(-((dist / sigma) ** 2.0))
+
+            _, _, vh = np.linalg.svd(sim_matrix.T)
+            self.features = vh[:dimensions, :]
+        else:
+            self.features = None
+
+    def get_feature(self, state, action):
+        if self.feature_type == "one_hot":
+            feature = np.zeros((self.S, self.A))
+            feature[state, action] = 1
+
+            return feature.flatten()
+        else:
+            return self.features[:, state * self.Na + action].copy()
 
     #
     # Code for rendering
