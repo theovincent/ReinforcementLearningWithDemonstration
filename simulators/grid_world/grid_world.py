@@ -6,6 +6,32 @@ import numpy as np
 from rlberry.envs import GridWorld
 
 
+def get_time_to_end(env, state, policy):
+    env.state = state
+    time_to_end = 0
+
+    for timestep in range(500):
+        action = policy[state]
+        next_state, reward, is_terminal, info = env.step(action)
+        state = next_state
+        if is_terminal:
+            break
+        else:
+            time_to_end += 1
+
+    return time_to_end
+
+
+def set_granular_reward(env, policy):
+    reward_at = {}
+    for coord, state in env.coord2index.items():
+        if state == -1:
+            continue
+        reward_at[coord] = -get_time_to_end(env, state, policy) / len(env.coord2index)
+
+    env.reward_at = reward_at
+
+
 class Maze(GridWorld):
     """Creates an instance of a simple grid-world MDP."""
 

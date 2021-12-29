@@ -9,7 +9,7 @@ def lstd_grid_word(
     regularisor_bellmann,
     max_iteration=10,
     epsilon_decay_limit=0.2,
-    regularisor_expert=False,
+    regularisor_expert=0,
     show_policy=False,
     show_value_function=False,
     show_statistics=False,
