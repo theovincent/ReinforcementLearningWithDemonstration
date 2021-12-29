@@ -7,6 +7,7 @@ from rlberry.envs import GridWorld
 
 
 def get_time_to_end(env, state, policy):
+    """The policy is expected to bring the agent to the terminal state."""
     env.state = state
     time_to_end = 0
 
@@ -36,6 +37,8 @@ class Maze(GridWorld):
     """Creates an instance of a simple grid-world MDP."""
 
     def __init__(self, grid_name, feature_type, dimensions=None, sigma=None):
+        from simulators.grid_world import GAMMA
+
         if grid_name == "test":
             super().__init__(
                 nrows=1,
@@ -85,6 +88,7 @@ class Maze(GridWorld):
                 terminal_states=((9, 14),),
             )
 
+        self.gamma = GAMMA
         self.feature_type = feature_type
 
         if self.feature_type != "one_hot":
@@ -199,6 +203,31 @@ class Maze(GridWorld):
                 else:
                     img[self.nrows - 1 - rr, cc, :3] = scalar_map.to_rgba(layout[rr, cc])[:3]
         return img
+
+    def display_value_function(self, Q):
+        import matplotlib.pyplot as plt
+
+        V = Q.max(axis=1)
+
+        plt.figure()
+        plt.title("Value function")
+        img = self.get_layout_img(V)
+        plt.imshow(img)
+        plt.show()
+
+    def display_policy(self, Q):
+        import matplotlib.pyplot as plt
+
+        from simulators.grid_world import COMMANDS
+
+        policy = np.argmax(Q, axis=1)
+
+        plt.figure()
+        img = self.get_layout_img(policy, min=0, max=3)
+        plt.title("Policy")
+        plt.xlabel(COMMANDS)
+        plt.imshow(img)
+        plt.show()
 
 
 def simulate_policy(policy, path_simulation, env, horizon):

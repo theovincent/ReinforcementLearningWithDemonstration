@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def optimise_u(env, samples, w, regularisor_bellmann, gamma):
+def optimise_u(env, samples, w, regularisor_bellmann):
     size_feature = env.get_feature(0, 0).shape[0]
 
     features = np.zeros((len(samples), size_feature))
@@ -15,7 +15,7 @@ def optimise_u(env, samples, w, regularisor_bellmann, gamma):
 
     inverse_matrix = np.linalg.inv(features.T @ features + regularisor_bellmann * len(samples) * np.eye(size_feature))
 
-    return inverse_matrix @ features.T @ (rewards + gamma * next_features @ w)
+    return inverse_matrix @ features.T @ (rewards + env.gamma * next_features @ w)
 
 
 def optimise_w(env, samples, u, regularisor):
