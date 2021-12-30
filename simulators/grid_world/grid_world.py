@@ -13,7 +13,7 @@ def get_time_to_end(env, state, policy):
 
     for timestep in range(500):
         action = policy[state]
-        next_state, reward, is_terminal, info = env.step(action)
+        next_state, _, is_terminal, _ = env.step(action)
         state = next_state
         if is_terminal:
             break
@@ -28,40 +28,48 @@ def set_granular_reward(env, policy):
     for coord, state in env.coord2index.items():
         if state == -1:
             continue
-        reward_at[coord] = -get_time_to_end(env, state, policy) / len(env.coord2index)
+        reward_at[coord] = -get_time_to_end(env, state, policy)
 
-    env.reward_at = reward_at
+    return Maze(env.grid_name, env.feature_type, env.dimensions, env.sigma, reward_at)
 
 
 class Maze(GridWorld):
     """Creates an instance of a simple grid-world MDP."""
 
-    def __init__(self, grid_name, feature_type, dimensions=None, sigma=None):
+    def __init__(self, grid_name, feature_type, dimensions=None, sigma=None, reward_at=None):
         from simulators.grid_world import GAMMA
 
-        if grid_name == "test":
+        self.grid_name = grid_name
+        self.feature_type = feature_type
+        self.dimensions = dimensions
+        self.sigma = sigma
+        self.gamma = GAMMA
+
+        if self.grid_name == "test":
             super().__init__(
                 nrows=1,
                 ncols=5,
-                reward_at={(0, 0): -1.0, (0, 1): 0.0, (0, 2): 0.1, (0, 3): 0.5, (0, 4): 1.0},
+                reward_at=reward_at
+                if reward_at is not None
+                else {(0, 0): -1.0, (0, 1): 0.0, (0, 2): 0.1, (0, 3): 0.5, (0, 4): 1.0},
                 walls=None,
                 success_probability=1,
                 terminal_states=((0, 4),),
             )
-        elif grid_name == "simple":
+        elif self.grid_name == "simple":
             super().__init__(
                 nrows=5,
                 ncols=7,
-                reward_at={(0, 6): 1.0},
+                reward_at=reward_at if reward_at is not None else {(0, 6): 1.0},
                 walls=((0, 4), (1, 4), (2, 4), (3, 4)),
                 success_probability=1,
                 terminal_states=((0, 6),),
             )
-        elif grid_name == "large":
+        elif self.grid_name == "large":
             super().__init__(
                 nrows=10,
                 ncols=15,
-                reward_at={(9, 14): 1.0},
+                reward_at=reward_at if reward_at is not None else {(9, 14): 1.0},
                 walls=(
                     # First wall
                     (0, 4),
@@ -88,9 +96,6 @@ class Maze(GridWorld):
                 terminal_states=((9, 14),),
             )
 
-        self.gamma = GAMMA
-        self.feature_type = feature_type
-
         if self.feature_type != "one_hot":
             sim_matrix = np.zeros((self.Ns * self.Na, self.Ns))
 
@@ -110,10 +115,10 @@ class Maze(GridWorld):
                             (prop_row_state_j - prop_row_next_state_i) ** 2.0
                             + (prop_col_state_j - prop_col_next_state_i) ** 2.0
                         )
-                        sim_matrix[state_i * self.Na + action_i, state_j] = np.exp(-((dist / sigma) ** 2.0))
+                        sim_matrix[state_i * self.Na + action_i, state_j] = np.exp(-((dist / self.sigma) ** 2.0))
 
             _, _, vh = np.linalg.svd(sim_matrix.T)
-            self.features = vh[:dimensions, :]
+            self.features = vh[: self.dimensions, :]
         else:
             self.features = None
 
@@ -187,9 +192,7 @@ class Maze(GridWorld):
                 min = state_data.min()
             if max is None:
                 max = state_data.max()
-            state_data = state_data - min
-            if state_data.max() > 0.0:
-                state_data = state_data / max
+            state_data = (state_data - min) / (max - min)
 
         colormap_fn = plt.get_cmap(colormap_name)
         layout = self.get_layout_array(state_data, fill_walls_with=np.nan)
@@ -211,7 +214,7 @@ class Maze(GridWorld):
 
         plt.figure()
         plt.title("Value function")
-        img = self.get_layout_img(V)
+        img = self.get_layout_img(V / np.max(np.abs(V)))
         plt.imshow(img)
         plt.show()
 
@@ -246,6 +249,12 @@ def simulate_policy(policy, path_simulation, env, horizon):
     """
     from pyvirtualdisplay import Display
 
+    reward_at = env.reward_at
+    min_reward_at = np.min(list(reward_at.values()))
+    for key in reward_at:
+        reward_at[key] -= min_reward_at
+    env_for_video = Maze(env.grid_name, env.feature_type, env.dimensions, env.sigma, reward_at)
+
     # To make the rendering possible
     display = Display(visible=0, size=(1400, 900))
     display.start()
@@ -254,18 +263,18 @@ def simulate_policy(policy, path_simulation, env, horizon):
     if not path_simulation.parent.exists():
         os.mkdir(path_simulation.parent)
 
-    env.enable_rendering()
-    state = env.reset()  # get initial state
+    env_for_video.enable_rendering()
+    state = env_for_video.reset()  # get initial state
     for timestep in range(horizon):
         if policy is None:
-            action = env.action_space.sample()  # take random actions
+            action = env_for_video.action_space.sample()  # take random actions
         else:
             action = policy[state]
-        next_state, reward, is_terminal, info = env.step(action)
+        next_state, reward, is_terminal, info = env_for_video.step(action)
         state = next_state
         if is_terminal:
             break
     # save video and clear buffer
-    env.save_video(str(path_simulation), framerate=5)
-    env.clear_render_buffer()
-    env.disable_rendering()
+    env_for_video.save_video(str(path_simulation), framerate=5)
+    env_for_video.clear_render_buffer()
+    env_for_video.disable_rendering()

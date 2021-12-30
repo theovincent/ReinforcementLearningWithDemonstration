@@ -133,7 +133,6 @@ class ReplayBuffer:
         return transitions, is_expert, weight
 
     def display_statistics_on_transitions(self):
-        plt.figure()
         number_occurences = np.zeros(self.env.S)
 
         for transition in self.buffer_expert:
@@ -143,6 +142,7 @@ class ReplayBuffer:
             number_occurences[transition.state] += 1
 
         img = self.env.get_layout_img(number_occurences)
+        plt.figure()
         plt.title("Statistics on occurences")
         plt.imshow(img)
         plt.show()
