@@ -20,7 +20,7 @@ RUN groupadd --gid $USER_GID $USERNAME \
 
 # For RlBerry display
 RUN sudo apt-get install -y xvfb
-RUN sudo apt-get install -y python-opengl
+RUN sudo apt-get install -y python3-opengl
 RUN sudo apt-get install -y ffmpeg
 
 RUN mkdir /home/developer/ReinforcementLearningWithDemonstration/ 
