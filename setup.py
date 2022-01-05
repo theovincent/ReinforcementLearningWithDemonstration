@@ -59,6 +59,7 @@ setup(
         "traitlets==5.1.1",
         "typing_extensions==4.0.1",
         "wcwidth==0.2.5",
+        "torch==1.10.1",
     ],
     extras_require={"dev": ["tqdm", "ipykernel", "black"]},
 )

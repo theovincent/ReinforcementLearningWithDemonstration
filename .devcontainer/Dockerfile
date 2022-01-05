@@ -1,4 +1,4 @@
-FROM python:3.10.1-bullseye
+FROM python:3.9.9-bullseye
 
 RUN echo 'root:root' | chpasswd
 ENV SSH_AUTH_SOCK=/ssh-agent
