@@ -139,4 +139,4 @@ def tabular_DQfD(
         if show_policy and rl_iteration % display_frequency == 0:
             env.display_policy(Q)
 
-    return Q, replay_buffer
+    return Q
