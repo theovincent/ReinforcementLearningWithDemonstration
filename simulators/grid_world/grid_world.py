@@ -33,6 +33,27 @@ def set_granular_reward(env, policy):
     return Maze(env.grid_name, env.feature_type, env.dimensions, env.sigma, reward_at)
 
 
+def set_normilized_reward(env):
+    reward_at = env.reward_at
+    rewards = [reward for reward in reward_at.values()]
+    min_reward = min(rewards)
+    max_reward = max(rewards)
+
+    for coord in reward_at.keys():
+        reward_at[coord] = (env.reward_at[coord] - min_reward) / (max_reward - min_reward)
+
+    return Maze(env.grid_name, env.feature_type, env.dimensions, env.sigma, reward_at)
+
+
+def divide_reward_by(env, factor):
+    reward_at = env.reward_at
+    for coord in env.reward_at.keys():
+        reward_at[coord] = env.reward_at[coord] / factor
+
+    return Maze(env.grid_name, env.feature_type, env.dimensions, env.sigma, reward_at)
+
+
+
 class Maze(GridWorld):
     """Creates an instance of a simple grid-world MDP."""
 
@@ -207,10 +228,13 @@ class Maze(GridWorld):
                     img[self.nrows - 1 - rr, cc, :3] = scalar_map.to_rgba(layout[rr, cc])[:3]
         return img
 
-    def display_value_function(self, Q):
+    def display_value_function(self, Q_or_V, from_value=False):
         import matplotlib.pyplot as plt
 
-        V = Q.max(axis=1)
+        if from_value:  # Q_or_V is V
+            V = Q_or_V
+        else:  # Q_or_V is Q
+            V = Q_or_V.max(axis=1)
 
         plt.figure()
         plt.title("Value function")
@@ -218,12 +242,15 @@ class Maze(GridWorld):
         plt.imshow(img)
         plt.show()
 
-    def display_policy(self, Q):
+    def display_policy(self, Q_or_pi, from_pi=False):
         import matplotlib.pyplot as plt
 
         from simulators.grid_world import COMMANDS
 
-        policy = np.argmax(Q, axis=1)
+        if from_pi:  # Q_or_pi is pi
+            policy = Q_or_pi
+        else:  # Q_or_pi is Q
+            policy = np.argmax(Q_or_pi, axis=1)
 
         plt.figure()
         img = self.get_layout_img(policy, min=0, max=3)
