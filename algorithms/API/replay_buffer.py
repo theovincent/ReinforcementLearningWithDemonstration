@@ -14,9 +14,8 @@ class ReplayBuffer:
             self.collect_expert_samples(n_expert_samples, expert_policy, trajectory=False)
 
     def collect_expert_samples(self, n_samples, policy, trajectory=False):
-        state = self.env.initial_state_distribution
-
         self.env.reset()
+        state = self.env.state
         terminal = False
 
         for idx_sample in range(n_samples):
@@ -35,9 +34,8 @@ class ReplayBuffer:
             state = next_state
 
     def collect_rl_samples(self, n_samples, w, trajectory=False):
-        state = self.env.initial_state_distribution
-
         self.env.reset()
+        state = self.env.state
         terminal = False
 
         for idx_sample in range(n_samples):
@@ -48,7 +46,7 @@ class ReplayBuffer:
                 self.env.reset()
 
             # Policy improvement
-            if np.random.random() < self.epsilon_decay(n_samples):
+            if np.random.random() < self.epsilon_decay(len(self.buffer_rl)):
                 action = np.random.choice(self.env._actions)
             else:
                 action = np.argmax([self.env.get_feature(state, action) @ w for action in self.env._actions])

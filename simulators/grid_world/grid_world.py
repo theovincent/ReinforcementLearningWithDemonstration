@@ -238,7 +238,7 @@ class Maze(GridWorld):
 
         plt.figure()
         plt.title("Value function")
-        img = self.get_layout_img(V / np.max(np.abs(V)))
+        img = self.get_layout_img(V)
         plt.imshow(img)
         plt.show()
 
