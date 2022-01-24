@@ -36,12 +36,12 @@ def tabular_DQfD(
     n_step_td,
     n_expert_iterations,
     n_rl_iterations,
-    epsilon_decay_limit=0.2,
-    update_target_frequency=10,
-    td_loss_weight=1,
-    n_td_loss_weight=1,
-    expert_weight=1,
-    diff_action_from_expert_penalisation=0.8,
+    epsilon_decay_limit,
+    update_target_frequency,
+    td_loss_weight,
+    n_td_loss_weight,
+    expert_weight,
+    diff_action_from_expert_penalisation,
     show_policy=False,
     show_value_function=False,
     show_statistics=False,
@@ -54,7 +54,7 @@ def tabular_DQfD(
     for pow_gamma in range(1, n_step_td + 1):
         gammas.append(env.gamma * gammas[-1])
 
-    # Average weights
+    # Make the weights sum to one
     sum_weights = td_loss_weight + n_td_loss_weight + expert_weight
     td_loss_weight /= sum_weights
     n_td_loss_weight /= sum_weights
@@ -70,13 +70,13 @@ def tabular_DQfD(
     replay_buffer = ReplayBuffer(
         env,
         EpsilonDecay(limit=epsilon_decay_limit),
-        n_expert_trajectories=n_expert_trajectories,
-        expert_policy=expert_policy,
-        n_step_td=n_step_td,
+        n_expert_trajectories,
+        expert_policy,
+        n_step_td,
     )
 
-    Q = np.ones((env.Ns, env.Na)) * -150
-    Q_target = np.ones((env.Ns, env.Na)) * -150
+    Q = np.ones((env.Ns, env.Na)) * 0
+    Q_target = np.ones((env.Ns, env.Na)) * 0
 
     for expert_iteration in range(1, n_expert_iterations + 1):
         transitions, _, weight = replay_buffer.sample_n_transitions()
