@@ -16,8 +16,8 @@ class LargeMarginExpertLoss:
             q_value = self.env.get_feature(state, other_action) @ w
 
             if q_value > best_q_value:
-                best_action = other_action
                 best_q_value = q_value
+                best_action = other_action
 
         if return_grad:
             return (1 - (self.env.get_feature(state, action) @ w - best_q_value) > 0) * (
@@ -40,8 +40,8 @@ class PenalizationExpertLoss:
             penalized_q_value = self.env.get_feature(state, other_action) @ w + self.penality * other_action != action
 
             if penalized_q_value > best_penalized_q_value:
-                best_penalized_action = other_action
                 best_penalized_q_value = penalized_q_value
+                best_penalized_action = other_action
 
         if return_grad:
             return self.env.get_feature(state, best_penalized_action) - self.env.get_feature(state, action)
@@ -73,21 +73,25 @@ class LossW:
         for (state, action, _, _, _) in samples_expert:
             loss_expert += self.expert_loss(w, state, action)
 
-        loss_expert /= len(samples_expert) if len(samples_expert) else 1
+        loss_expert /= len(samples_expert) if len(samples_expert) != 0 else 1
 
         return loss_bellman + self.regularisor * w @ w + self.regularisor_expert * loss_expert
 
-    def grad(self, w, samples_bellman, samples_expert, u):
-        features = np.zeros((len(samples_bellman), self.env.dimensions))
+    def compute_feature_matrix(self, samples_bellman):
+        self.features = np.zeros((len(samples_bellman), self.env.dimensions))
 
         for idx_sample, (state, action, _, _, _) in enumerate(samples_bellman):
-            features[idx_sample] = self.env.get_feature(state, action)
-        grad_bellman = features.T @ features @ (w - u) / len(samples_bellman)
+            self.features[idx_sample] = self.env.get_feature(state, action)
+
+        self.features_T_features = self.features.T @ self.features / len(samples_bellman)
+
+    def grad(self, w, samples_expert, u):
+        grad_bellman = self.features_T_features @ (w - u) 
 
         grad_expert = 0
         for (state, action, _, _, _) in samples_expert:
             grad_expert += self.expert_loss(w, state, action, return_grad=True)
 
-        grad_expert /= len(samples_expert) if len(samples_expert) else 1
+        grad_expert /= len(samples_expert) if len(samples_expert) != 0 else 1
 
         return 2 * grad_bellman + 2 * self.regularisor * w + self.regularisor_expert * grad_expert

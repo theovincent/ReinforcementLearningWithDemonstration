@@ -20,8 +20,10 @@ def optimise_w(loss_w, w, samples_bellman, samples_expert, u, learning_rate):
     grad_w = float("inf")
     count = 0
 
+    loss_w.compute_feature_matrix(samples_bellman)
+
     while np.linalg.norm(grad_w) > 1e-6 and count < 5000:
-        grad_w = loss_w.grad(w, samples_bellman, samples_expert, u)
+        grad_w = loss_w.grad(w, samples_expert, u)
         w += -learning_rate * grad_w
         count += 1
 

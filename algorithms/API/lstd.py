@@ -25,15 +25,13 @@ def lstd_grid_word(
     show_value_function=False,
     show_statistics=False,
 ):
-    from algorithms.API.replay_buffer import ReplayBuffer
     from algorithms.epsilon_greedy import EpsilonDecay
-    from algorithms.API.optimizers import optimise_u, optimise_w
+    from algorithms.API.replay_buffer import ReplayBuffer
     from algorithms.API.losses import LossW
+    from algorithms.API.optimizers import optimise_u, optimise_w
 
     if n_expert_samples > 0:
-        from algorithms.VI_dynamic_programming import value_iteration
-
-        _, expert_policy = value_iteration(env.P, env.R, env.gamma)
+        expert_policy = env.expert_policy
     else:
         expert_policy = None
 
@@ -47,7 +45,7 @@ def lstd_grid_word(
 
     for iteration in range(max_iteration):
         # Exploration
-        replay_buffer.collect_rl_samples(n_rl_samples, w, trajectory=False)
+        replay_buffer.collect_rl_samples(n_rl_samples, w)
         if show_statistics:
             replay_buffer.display_statistics_on_samples()
 
@@ -69,10 +67,6 @@ def lstd_grid_word(
         if show_policy:
             env.display_policy(get_Q(env, w))
 
-    Q = np.zeros((env.S, env.A))
-
-    for state in env._states:
-        for action in env._actions:
-            Q[state, action] = env.get_feature(state, action) @ w
+    Q = get_Q(env, w)
 
     return Q, np.argmax(Q, axis=1), replay_buffer

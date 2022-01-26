@@ -23,12 +23,12 @@ def get_time_to_end(env, state, policy):
     return time_to_end
 
 
-def set_granular_reward(env, policy):
+def set_granular_reward(env):
     reward_at = {}
     for coord, state in env.coord2index.items():
         if state == -1:
             continue
-        reward_at[coord] = -get_time_to_end(env, state, policy)
+        reward_at[coord] = -env.time_to_end[state]
 
     return Maze(env.grid_name, env.feature_type, env.dimensions, env.sigma, reward_at)
 
@@ -53,11 +53,12 @@ def divide_reward_by(env, factor):
     return Maze(env.grid_name, env.feature_type, env.dimensions, env.sigma, reward_at)
 
 
-
 class Maze(GridWorld):
     """Creates an instance of a simple grid-world MDP."""
 
     def __init__(self, grid_name, feature_type, dimensions=None, sigma=None, reward_at=None):
+        from algorithms.VI_dynamic_programming import value_iteration
+
         from simulators.grid_world import GAMMA
 
         self.grid_name = grid_name
@@ -116,6 +117,11 @@ class Maze(GridWorld):
                 success_probability=1,
                 terminal_states=((9, 14),),
             )
+
+        _, self.expert_policy = value_iteration(self.P, self.R, self.gamma)
+        self.time_to_end = np.zeros(self.S)
+        for state in self._states:
+            self.time_to_end[state] = get_time_to_end(self, state, self.expert_policy)
 
         if self.feature_type != "one_hot":
             sim_matrix = np.zeros((self.Ns * self.Na, self.Ns))
