@@ -123,7 +123,7 @@ class Maze(GridWorld):
         for state in self._states:
             self.time_to_end[state] = get_time_to_end(self, state, self.expert_policy)
 
-        if self.feature_type != "one_hot":
+        if self.feature_type == "similarity":
             sim_matrix = np.zeros((self.Ns * self.Na, self.Ns))
 
             for state_i in range(self.Ns):
@@ -146,8 +146,6 @@ class Maze(GridWorld):
 
             _, _, vh = np.linalg.svd(sim_matrix.T)
             self.features = vh[: self.dimensions, :]
-        else:
-            self.features = None
 
     def get_feature(self, state, action):
         if self.feature_type == "one_hot":

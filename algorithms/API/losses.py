@@ -1,4 +1,3 @@
-from re import L
 import numpy as np
 
 
@@ -28,7 +27,7 @@ class LargeMarginExpertLoss:
 
 
 class PenalizationExpertLoss:
-    def __init__(self, env, penality=0.8):
+    def __init__(self, env, penality):
         self.env = env
         self.penality = penality
 
@@ -37,7 +36,7 @@ class PenalizationExpertLoss:
         best_penalized_action = None
 
         for other_action in self.env._actions:
-            penalized_q_value = self.env.get_feature(state, other_action) @ w + self.penality * other_action != action
+            penalized_q_value = self.env.get_feature(state, other_action) @ w + self.penality * float(other_action != action)
 
             if penalized_q_value > best_penalized_q_value:
                 best_penalized_q_value = penalized_q_value
@@ -50,7 +49,7 @@ class PenalizationExpertLoss:
 
 
 class LossW:
-    def __init__(self, env, regularisor, regularisor_expert, expert_loss_name):
+    def __init__(self, env, regularisor, regularisor_expert, expert_loss_name, expert_penality):
         self.env = env
         self.regularisor = regularisor
         self.regularisor_expert = regularisor_expert
@@ -58,7 +57,7 @@ class LossW:
         if expert_loss_name == "large_margin":
             self.expert_loss = LargeMarginExpertLoss(env)
         elif expert_loss_name == "penalizer":
-            self.expert_loss = PenalizationExpertLoss(env)
+            self.expert_loss = PenalizationExpertLoss(env, expert_penality)
         else:
             self.expert_loss = None
 
@@ -86,7 +85,7 @@ class LossW:
         self.features_T_features = self.features.T @ self.features / len(samples_bellman)
 
     def grad(self, w, samples_expert, u):
-        grad_bellman = self.features_T_features @ (w - u) 
+        grad_bellman = self.features_T_features @ (w - u)
 
         grad_expert = 0
         for (state, action, _, _, _) in samples_expert:

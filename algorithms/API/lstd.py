@@ -21,6 +21,7 @@ def lstd_grid_word(
     epsilon_decay_limit,
     regularisor_expert,
     expert_loss_name,
+    expert_penality,
     show_policy=False,
     show_value_function=False,
     show_statistics=False,
@@ -39,13 +40,13 @@ def lstd_grid_word(
         env, EpsilonDecay(limit=epsilon_decay_limit), n_expert_samples=n_expert_samples, expert_policy=expert_policy
     )
 
-    loss_w = LossW(env, regularisor, regularisor_expert, expert_loss_name)
+    loss_w = LossW(env, regularisor, regularisor_expert, expert_loss_name, expert_penality)
 
     w = np.zeros(env.dimensions)
 
-    for iteration in range(max_iteration):
+    for iteration in range(1, max_iteration):
         # Exploration
-        replay_buffer.collect_rl_samples(n_rl_samples, w)
+        replay_buffer.collect_rl_samples(n_rl_samples, w, iteration)
         if show_statistics:
             replay_buffer.display_statistics_on_samples()
 
@@ -69,4 +70,4 @@ def lstd_grid_word(
 
     Q = get_Q(env, w)
 
-    return Q, np.argmax(Q, axis=1), replay_buffer
+    return Q, np.argmax(Q, axis=1)

@@ -29,7 +29,7 @@ class ReplayBuffer:
 
             self.buffer_expert.append((state, action, reward, next_state, next_action))
 
-    def collect_rl_samples(self, n_samples, w):
+    def collect_rl_samples(self, n_samples, w, iteration):
         # Reset buffer rl to have strict on policy learning
         self.buffer_rl = []
 
@@ -42,7 +42,7 @@ class ReplayBuffer:
                 self.env.state = state
 
             # Policy improvement
-            if np.random.random() < self.epsilon_decay(len(self.buffer_rl) / 10):
+            if np.random.random() < self.epsilon_decay(2 * iteration):
                 action = np.random.choice(self.env._actions)
             else:
                 action = np.argmax([self.env.get_feature(state, action) @ w for action in self.env._actions])

@@ -22,7 +22,7 @@ def get_expert_loss(transitions, env, Q, Q_target, diff_action_from_expert_penal
         np.max(
             [
                 Q_target[transitions[0].state, action]
-                + diff_action_from_expert_penalisation * (action != transitions[0].action)
+                + diff_action_from_expert_penalisation * float(action != transitions[0].action)
                 for action in env._actions
             ]
         )
@@ -42,6 +42,8 @@ def tabular_DQfD(
     n_td_loss_weight,
     expert_weight,
     diff_action_from_expert_penalisation,
+    prioritized_buffer,
+    weight_occurencies,
     show_policy=False,
     show_value_function=False,
     show_statistics=False,
@@ -61,9 +63,7 @@ def tabular_DQfD(
     expert_weight /= sum_weights
 
     if n_expert_trajectories > 0:
-        from algorithms.VI_dynamic_programming import value_iteration
-
-        _, expert_policy = value_iteration(env.P, env.R, env.gamma)
+        expert_policy = env.expert_policy
     else:
         expert_policy = None
 
@@ -73,6 +73,8 @@ def tabular_DQfD(
         n_expert_trajectories,
         expert_policy,
         n_step_td,
+        prioritized_buffer,
+        weight_occurencies,
     )
 
     Q = np.ones((env.Ns, env.Na)) * 0
@@ -92,7 +94,7 @@ def tabular_DQfD(
             td_loss_weight * td_loss + n_td_loss_weight * n_step_td_loss + expert_weight * expert_loss
         )
 
-        replay_buffer.update_td_loss_last_sampled_transition(td_loss)
+        replay_buffer.td_losses[transitions[0].state][transitions[0].action] = td_loss
 
         if expert_iteration % update_target_frequency == 0:
             Q_target = Q.copy()
@@ -113,6 +115,9 @@ def tabular_DQfD(
         replay_buffer.collect_rl_transition(Q)
 
         transitions, is_expert, weight = replay_buffer.sample_n_transitions()
+        weight = min(1, weight)  # keep convex combinaison
+
+        # print(is_expert, weight)
 
         if show_statistics and rl_iteration % display_frequency == 0:
             replay_buffer.display_statistics(transitions)
@@ -129,7 +134,7 @@ def tabular_DQfD(
             td_loss_weight * td_loss + n_td_loss_weight * n_step_td_loss + expert_weight * expert_loss
         )
 
-        replay_buffer.update_td_loss_last_sampled_transition(td_loss)
+        replay_buffer.td_losses[transitions[0].state][transitions[0].action] = td_loss
 
         if rl_iteration % update_target_frequency == 0:
             Q_target = Q.copy()
@@ -139,4 +144,4 @@ def tabular_DQfD(
         if show_policy and rl_iteration % display_frequency == 0:
             env.display_policy(Q)
 
-    return Q
+    return Q, np.argmax(Q, axis=-1)

@@ -22,12 +22,12 @@ def optimise_w(loss_w, w, samples_bellman, samples_expert, u, learning_rate):
 
     loss_w.compute_feature_matrix(samples_bellman)
 
-    while np.linalg.norm(grad_w) > 1e-6 and count < 5000:
+    while np.linalg.norm(grad_w) > 1e-6 and count < 1000:
         grad_w = loss_w.grad(w, samples_expert, u)
         w += -learning_rate * grad_w
         count += 1
 
-    if count == 5000:
+    if count == 1000:
         print("! Warning ! Stopped before convergence")
         print("Grad norm", np.linalg.norm(grad_w))
 
