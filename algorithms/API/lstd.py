@@ -44,7 +44,7 @@ def lstd_grid_word(
 
     w = np.zeros(env.dimensions)
 
-    for iteration in range(1, max_iteration):
+    for iteration in range(1, max_iteration + 1):
         # Exploration
         replay_buffer.collect_rl_samples(n_rl_samples, w, iteration)
         if show_statistics:
