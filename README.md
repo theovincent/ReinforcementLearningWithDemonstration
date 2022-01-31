@@ -1,6 +1,6 @@
 # ReinforcementLearningWithDemonstration
 
-This project investigates how to learn a policy with a Reinforcement Learning Algorithm that has access to demonstrations.
+This project investigates how to learn a policy with a Reinforcement Learning Algorithm that has access to demonstrations. You can find the report that I have done [here](./ActiveLearningFromDemonstrations.pdf).
 
 ### Algorithms
 Three algorithms are implemented in this repository:
@@ -17,3 +17,12 @@ Please find the code in the [simulators](./simulators) folder.
 
 ### Experiments
 To play with the algorithms, you can use the [experiments](./experiments) folder where jupyter notebooks have been made to try the different algorithms.
+
+<table style="width:100%; table-layout:fixed;">
+	<tr>
+		<td><img width="1000px" src="gifs/DQfD_demo.gif"></td>
+	</tr>
+	<tr>
+		<td>Example of the DQfD notebook</td>
+	</tr>
+</table>
