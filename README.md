@@ -5,7 +5,7 @@ This project investigates how to learn a policy with a Reinforcement Learning Al
 ### Algorithms
 Three algorithms are implemented in this repository:
 - [Learning from Limited Demonstrations](http://ncfrn.mcgill.ca/members/pubs/kimnips13.pdf) from Kim et al.. In linear setting.
-- [Deep Q-learning from Qemonstrations](https://arxiv.org/pdf/1704.03732.pdf) from Hester et al.. In tabular setting.
+- [Deep Q-learning from Demonstrations](https://arxiv.org/pdf/1704.03732.pdf) from Hester et al.. In tabular setting.
 - [Reinforcement learning from imperfect demonstrations](https://arxiv.org/pdf/1802.05313.pdf) from Gao et al.. In neural network setting.
 
 Please find the code in the [algorithms](./algorithms) folder.
